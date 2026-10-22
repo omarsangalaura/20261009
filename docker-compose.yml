@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+       # Recuperar contraseña de archivo dentro del contenedor en la ruta de secretos
+      MARIA_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MARIA_DATABASE: "app"
+    # Pasar secretos desde el host, indicar que secreto se utilizará en el contenedor
+    secrets:
+      - db_root_password # Mejor si tienen el mismo nombre que arriba
+    volumes:
+      - db_data:/var/lib/mysql
+  php:
+    build: ./php
+    ports:
+      - "8085:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: app
+      DB_USER: root
+      DB_PASSWORD_FILE: /run/secrets/db_pass
+    secrets:
+      - db_pass
+    depends_on:
+      - db
+volumes:
+  # Si el volumen ya existe lo utilizara
+  db_data:
+
+secrets:
+  # Indicar nombre y archivo (file) que se incluirá como secreto
+  db_root_password:
+    file: ./secrets/db_root_password.txt
+  db_pass:
+    file: ./secrets/db_password.txt
